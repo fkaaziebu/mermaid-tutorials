@@ -1,7 +1,7 @@
 # DIAGRAM TYPES
 ### *Flowchart*
 ```mermaid
-graph TD;
+flowchart TD;
     A-->B;
     A-->C;
     B-->D;
