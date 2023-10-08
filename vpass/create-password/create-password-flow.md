@@ -1,8 +1,8 @@
-# VPASS GET PASSWORDS DIAGRAM
+# VPASS CREATE PASSWORD DIAGRAM
 ## Authentication
-Getting Passwords in VPASS requires that the user is authenticated by the VPASS system before user is authorized to make any changes to reflect in the database
+Creating Passwords in VPASS requires that the user is authenticated by the VPASS system before user is authorized to make any changes to reflect in the database
 
-## Password Fetch Flow Diagram
+## Password Creation Flow Diagram
 ```mermaid
 flowchart TB
     subgraph Client Layer
@@ -16,7 +16,7 @@ flowchart TB
     end
 
     subgraph Server Layer
-        conditional{"getUserPasswords()"}
+        conditional{"createPasswordEndPoint()"}
     end
 
     subgraph Data Layer
@@ -27,7 +27,7 @@ flowchart TB
         actor-- 1 -->providers
 
     %% Get Password request from client %%
-        actor-- Request User Passwords (2) -->conditional
+        actor-- API call to /api/create-password endpoint (2) -->conditional
 
     %% Check if there is a current user
         conditional<-. Get authenticated user (3) .->currentUser
@@ -36,7 +36,40 @@ flowchart TB
         conditional-- If not authenticated (4) -->redirect
 
     %% Check if user exist
-        conditional<-. Get Password in DB (5) .->database
+        conditional-- Create Password in DB (5) -->database
+```
+
+## Create Password API Endpoint
+```javascript
+import { NextResponse } from "next/server";
+
+import { currentProfile } from "@/lib/current-profile";
+import { db } from "@/lib/db";
+
+export async function POST(req: Request, { params }: { params: { userId } }) {
+    try {
+        const profile = await currentProfile();
+        const { description, password } = await req.json()
+
+        if (!profile) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        if (!params.userId) {
+            return new NextResponse("User ID Missing", { status: 400 });
+        }
+
+        const password = await.db.password.create({
+            data: {
+                profileId: profile.id,
+                description,
+                password 
+            }
+        })
+
+        return NextResponse.json({ msg: "Password created, successfully" });
+    }
+}
 ```
 
 ## Fetch Passwords
