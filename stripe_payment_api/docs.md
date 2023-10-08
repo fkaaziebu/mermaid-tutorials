@@ -29,6 +29,26 @@ flowchart TB
 Let's now look at each component in the diagram above and provided an implementation for each. At the end we will rap everything together to make it functional
 
 ## Stripe API
+To use the stripe API, one must first install the stripe node module as follows. We will also install dotenv for our environment variables
+```bash
+npm install stripe dotenv nodemon express cors
+```
+Remember to edit the package.json scripts like below
+```json
+{
+    // Other stuffs above
+    "scripts": {
+        "start": "nodemon index.js"
+    }
+    // Other stuffs below
+}
+```
+
+Store the stripe publishable and secret keys in a .env file
+```env
+STRIPE_API_KEY=something
+STRIPE_SECRET_KEY=something
+```
 ```javascript
 // file path: ./src/stripe/StripeRouter
 const express = require("express");
@@ -63,6 +83,8 @@ router.post("/api/stripe",
 
 ```javascript
 // file path: ./src/stripe/StripeService
+const { stripe } = require('./src/config/stripe');
+
 const create = async (email) => {
     const stripeSession = await stripe.checkout.sessions.create({
         success_url: "/johnson",
@@ -99,33 +121,31 @@ module.exports = {
 ```
 
 ## Stripe Webhook
+Webhooks are a way for Stripe to notify your server of events that happen in your account, such as successful payments or failed charges. In this our application, we are using webhook to trigger creation of user invoices in our database.
 ```javascript
 const express = require("express");
-import Stripe from "stripe";
-import { headers } from "express-header";
-import db from "./src/config/db";
-import { stripe } from "./src/config/stripe";
+const db = require("./src/config/db");
+const { stripe } = require("./src/config/stripe");
 
 const router = express.Router();
 
 router.post("/api/webhook", async (req, res) => {
-    const body = await req.text();
-    const signature = headers().get("Stripe-Signature") as string;
+    const signature = req.header['stripe-signature'];
 
-    let event: Stripe.Event;
+    let event;
 
     try {
         // UI generated here
         event = stripe.webhooks.constructEvent(
-            body,
+            req.body,
             signature,
             process.env.STRIPE_WEBHOOK_SECRET!
         );
     } catch (error) {
-        return res.send({error: `Webhook Error: ${error.message}`}).status(400);
+        return res.status(400).send({error: `Webhook Error: ${error.message}`});
     }
 
-    const session = event.data.object as Stripe.Checkout.Session;
+    const session = event.data.object;
 
     if (event.type === "checkout.session.completed") {
         const subscription = await stripe.subscriptions.retrieve(
@@ -160,5 +180,59 @@ router.post("/api/webhook", async (req, res) => {
             }
         })
     }
+
+    res.send({msg: "Payment successful"}).status(200);
 })
+```
+
+## Putting everything together
+Let's now combine everything together into our app.js, where our endpoints will leave.
+
+```javascript
+const express = require("express");
+const StripeRouter = require("./stripe/StripeRouter");
+const StripeWebHook = require("./middleware/StripeWebHook");
+const cors = require("cors");
+
+const app = express();
+app.use(express.json());
+app.use(cors());
+
+// Middleware function
+app.use(StripeWebHook);
+
+// Stripe
+app.use(StripeRouter);
+
+module.exports = app;
+```
+
+We can then start our express application in a index.js file. We also need to initialize our prisma client so we can use the prisma ORM with our MySQL database.
+
+```javascript
+const app = require("./src/app.js");
+
+app.listen(3000, () => console.log("App is running"));
+```
+
+```javascript
+// file path: "./src/config/db";
+const { PrismaClient } = require("prisma/client");
+
+export const db = new PrismaClient();
+```
+
+## Making the client side request with axios in html file
+We need to import the axios cdn script in our html file like so and write the function to make the api call to our created server
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js"></script>
+<script>
+function handleRequest() {
+    axios.post("url", {name: "data"}).then(function (response) {
+        console.log(response)
+        // do whatever you want if console is [object object] then stringify the response
+    })
+}
+// WILL UPDATE THIS LATER
+<script>
 ```
