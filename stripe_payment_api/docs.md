@@ -17,7 +17,7 @@ flowchart TB
     stripe_api-- Trigger Stripe Payment Event -->stripe_webhook
 
     %% Redirection to Stripe UI for payment processing
-    stripe_webhook--ostripe_ui
+    stripe_api--ostripe_ui
 
     %% Create an invoice in database on session completion
     %% Update the invoice on payment success
