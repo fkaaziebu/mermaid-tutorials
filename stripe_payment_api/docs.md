@@ -14,7 +14,7 @@ flowchart TB
     client-- /api/stripe -->stripe_api
 
     %% Starting Stripe event session
-    stripe_api-- Trigger Stripe Payment Event -->stripe_webhook
+    stripe_ui-- Trigger Stripe Payment Event -->stripe_webhook
 
     %% Redirection to Stripe UI for payment processing
     stripe_api--ostripe_ui
