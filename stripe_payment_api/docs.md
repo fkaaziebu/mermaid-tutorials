@@ -223,7 +223,7 @@ export const db = new PrismaClient();
 ```
 
 ## Making the client side request with axios in html file
-We need to import the axios cdn script in our html file like so and write the function to make the api call to our created server
+Import axios cdn library in html file like so and write the function to make the api call to created server endpoint
 ```html
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js"></script>
 <script>
@@ -234,5 +234,5 @@ function handleRequest() {
     })
 }
 // WILL UPDATE THIS LATER
-<script>
+</script>
 ```
