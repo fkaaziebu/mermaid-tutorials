@@ -1,6 +1,6 @@
 # VPASS VIEW PASSWORD DIAGRAM
 ## Authentication
-In the process of viewing passwords as well, users need to be authenticated.
+In the process of viewing passwords as well, users need to be authenticated. After users are authenticated, we have to check if the user has a master password, if not we show a pop-up for them to create a master password. This will probably happen when the user visits the dashboard. The master password is stored as a cookie in the frontend and stored in server-side as session in database. 
 
 ## View Password Flow Diagram
 ```mermaid
@@ -17,6 +17,7 @@ flowchart TB
 
     subgraph Server Layer
         conditional{"viewPasswordEndPoint()"}
+        master_pass(Master Password Check)
     end
 
     subgraph Data Layer
@@ -25,6 +26,9 @@ flowchart TB
 
     %% Login %%
         actor-- 1 -->providers
+
+    %% Onclick to either view or delete password, check for master password and validity as well
+    conditional-->master_pass<-.Check session for master password (5).->database
 
     %% Get Password request from client %%
         actor-- API call to /api/passId/view-password endpoint (2) -->conditional
@@ -36,7 +40,7 @@ flowchart TB
         conditional-- If not authenticated (4) -->redirect
 
     %% Check if user exist
-        conditional-- Get Password in DB (5) -->database
+        conditional-- Get Password in DB (6) -->database
 ```
 
 ## View Password API Endpoint

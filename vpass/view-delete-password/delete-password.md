@@ -17,6 +17,7 @@ flowchart TB
 
     subgraph Server Layer
         conditional{"deletePasswordEndPoint()"}
+        master_pass(Master Password Check)
     end
 
     subgraph Data Layer
@@ -25,6 +26,9 @@ flowchart TB
 
     %% Login %%
         actor-- 1 -->providers
+
+    %% Onclick to either view or delete password, check for master password and validity as well
+    conditional-->master_pass<-.Check session for master password (5).->database
 
     %% Get Password request from client %%
         actor-- API call to /api/passId/delete-password endpoint (2) -->conditional
@@ -36,7 +40,7 @@ flowchart TB
         conditional-- If not authenticated (4) -->redirect
 
     %% Check if user exist
-        conditional-- Get Password in DB (5) -->database
+        conditional--  Delete Password in DB (6) -->database
 ```
 
 ## Delete Password API Endpoint
